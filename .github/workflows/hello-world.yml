@@ -1,0 +1,17 @@
+#github/workflows/hello-world.yml
+
+name: Hello World Workflow
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  say-hello:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print Hello Message
+        run: echo "Hello from Github Actions!"
+
+      - name: Show Runner OS Info
+        run: uname -a
