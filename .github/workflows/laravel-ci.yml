@@ -10,14 +10,35 @@ jobs:
   laravel-tests:
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        php-version: ['8.4']
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: laravel_test
+          MYSQL_ROOT_PASSWORD: password
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
     steps:
       - uses: actions/checkout@v4
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.4'
-          extensions: mbstring, pdo_sqlite, sqlite3
+          php-version: ${{ matrix.php-version }}
+          extensions: mbstring, pdo_sqlite, sqlite3, pdo_mysql
+
+      - name: Cache Composer Dependencies
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
 
       - name: Install Dependencies
         run: composer install --prefer-dist --no-progress --no-interaction
@@ -32,3 +53,10 @@ jobs:
       
       - name: Run tests
         run: php artisan test
+        env:
+          DB_CONNECTION: mysql
+          DB_DATABASE: laravel_test
+          DB_USERNAME: root
+          DB_PASSWORD: password
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
